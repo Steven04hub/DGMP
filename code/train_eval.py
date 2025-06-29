@@ -5,13 +5,16 @@ import os
 import torch
 import torch.nn.functional as F
 from torch import tensor
-from torch.optim import Adam,SGD
+from torch.optim import Adam, SGD
+from sklearn.metrics import roc_auc_score, average_precision_score
 
 def run(dataset, gpu_no, model, epochs, lr, weight_decay, early_stopping, logger=None):
-    
-    torch.cuda.set_device(gpu_no)
-    # print(torch.cuda.is_available())
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    if gpu_no >= 0 and torch.cuda.is_available():
+        torch.cuda.set_device(gpu_no)
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
 
     valacc, val_losses, accs, durations = [], [], [], []
     # epoch_time = []
@@ -94,6 +97,7 @@ def evaluate(model, data):
 
     with torch.no_grad():
         logits = model(data)
+    probs = logits.exp()
 
     outs = {}
     for key in ['train', 'val', 'test']:
@@ -101,9 +105,27 @@ def evaluate(model, data):
         loss = F.nll_loss(logits[mask], data.y[mask]).item()
         pred = logits[mask].max(1)[1]
         acc = pred.eq(data.y[mask]).sum().item() / mask.sum().item()
+        y_true = data.y[mask].cpu().numpy()
+        y_score = probs[mask].cpu().numpy()
+        if y_score.shape[1] == 1:
+            score = y_score[:, 0]
+        else:
+            score = y_score
+        try:
+            if score.ndim == 1 or score.shape[1] == 1:
+                auc = roc_auc_score(y_true, score)
+                auprc = average_precision_score(y_true, score)
+            else:
+                auc = roc_auc_score(y_true, score, multi_class='ovr')
+                auprc = average_precision_score(y_true, score, average='macro')
+        except ValueError:
+            auc = float('nan')
+            auprc = float('nan')
 
         outs['{}_loss'.format(key)] = loss
         outs['{}_acc'.format(key)] = acc
+        outs['{}_auc'.format(key)] = auc
+        outs['{}_auprc'.format(key)] = auprc
 
     return outs,logits
 
