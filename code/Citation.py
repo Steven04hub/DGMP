@@ -74,8 +74,9 @@ class Citation(InMemoryDataset):
     def __repr__(self):
         return '{}()'.format(self.name)
 
-def citation_datasets(path="/home/disk1/xujingyu/DGMP/DGMP/code/data/RegNetwrok/raw/", dataset='RegNetwrok', alpha=0.1,cv_run=None,adj_type=None):
-    # path = os.path.join(save_path, dataset)
+def citation_datasets(path=None, dataset='RegNetwork', alpha=0.1, cv_run=None, adj_type=None):
+    if path is None:
+        path = osp.join(osp.dirname(__file__), 'data', dataset, 'raw')
     os.makedirs(path, exist_ok=True)
     dataset_path = os.path.join(path, '{}.npz'.format(dataset))
     g = load_npz_dataset(dataset_path)
@@ -407,7 +408,7 @@ def cross_validation_sets(y, mask, folds):
     return k_sets
 
 if __name__ == "__main__":
-    data = citation_datasets(path="/home/disk1/xujingyu/DGMP/DGMP/code/data/RegNetwork/raw/", dataset='RegNetwrok')
+    data = citation_datasets(dataset='RegNetwork')
     print(data.train_mask.shape)
     # print_dataset_info()
     # get_npz_data(dataset='amazon_photo')

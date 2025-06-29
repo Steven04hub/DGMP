@@ -10,6 +10,7 @@ import numpy as np
 import networkx as nx
 import random
 import os
+import mygene
 
 A = pd.read_table('/home/disk1/xujingyu/DGMP/network/human.source',header = None)
 A = A.iloc[0:151215,[0,2]]
@@ -174,7 +175,7 @@ node_names = node_names.iloc[:,0]
 np.savez('RegNetwork.npz',adj_data=adj_data,adj_indices=adj_indices ,adj_indptr=adj_indptr,adj_shape=adj_shape,
                            attr_data=attr_data,attr_indices=attr_indices,attr_indptr=attr_indptr,attr_shape=attr_shape,
                            class_names=class_names,node_names=node_names,labels = labels)
-np.load('C:/Users/xujingyu/Desktop/RegNetwrok.npz')
+np.load('RegNetwork.npz')
 
 #nan_indices = np.argwhere(np.isnan(labels))
 #a = labels.tolist()
